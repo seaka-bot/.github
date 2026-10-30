@@ -226,7 +226,17 @@ $sub[1e39;1]
 ❌ Function `$sub` at `1:1` returned an error: number out of range in position 1, valid range -340282366920938463463374607431768211456.000000 - 340282366920938463463374607431768211456.000000
 ```
 
-É por isso que o laço com `$replaceText[$sub[1eY;1];9;código]` (`1e5 − 1 = 99999`, cinco noves, cinco cópias do código) vai só até Y = 38.
+Dentro dessa faixa, a conta com inteiros é **exata**, sem arredondar:
+
+```bdfd
+$sub[1e3;1]                        → 999
+$sub[1e38;1]                       → 99999999999999999999999999999999999999
+$replaceText[$sub[1e3;1];9;oi ]    → oi oi oi
+```
+
+Isso vira um laço: `1eY − 1` é um número com Y noves, e o `$replaceText` troca cada 9 pelo código, repetindo o código Y vezes. Funciona até Y = 38, porque `1e39` já passa do limite.
+
+> **Cuidado:** `$divide` sem `$enableDecimals` corta a parte decimal: `$divide[1;2]` dá `0`.
 
 ---
 
