@@ -8,6 +8,46 @@ As técnicas pra contornar a falta de loop, banco e sessão estão nas [Técnica
 - [$onlyIf dentro de $try dispara o $catch](#onlyif-dentro-de-try-dispara-o-catch)
 - [O código depois do $endasync roda antes do bloco](#o-código-depois-do-endasync-roda-antes-do-bloco)
 - [$stop dentro de $async só encerra o bloco](#stop-dentro-de-async-só-encerra-o-bloco)
+- [Resposta efêmera a um botão vem com os botões da mensagem](#resposta-efêmera-a-um-botão-vem-com-os-botões-da-mensagem)
+- [Num comando de mensagem, os botões só aparecem no fim](#num-comando-de-mensagem-os-botões-só-aparecem-no-fim)
+
+---
+
+## Resposta efêmera a um botão vem com os botões da mensagem
+
+Quando alguém clica num botão e o bot responde com `$ephemeral` (a mensagem que só a pessoa vê), a resposta vem com **uma cópia dos botões** da mensagem onde o clique aconteceu.
+
+```bdfd
+$if[$getTextSplitIndex[$authorID]==-1]$else $ephemeral Você já está nessa partida! $stop $endif
+```
+
+Clicou em **Entrar** duas vezes? A resposta "Você já está nessa partida!" aparece com Entrar, Iniciar e Sacar embaixo. Parece que a mensagem tem botões próprios, e quem clica neles se confunde.
+
+### O contorno
+
+Junte um `$removeButtons` ao `$ephemeral`. Na resposta efêmera, ele tira a cópia, e a mensagem original continua com os botões dela:
+
+```bdfd
+$if[$getTextSplitIndex[$authorID]==-1]$else $ephemeral $removeButtons Você já está nessa partida! $stop $endif
+```
+
+É por isso que o [Uno](https://github.com/seaka-bot/uno) escreve sempre `$ephemeral $removeButtons` nas recusas.
+
+---
+
+## Num comando de mensagem, os botões só aparecem no fim
+
+O `$addButton` coloca o botão na **resposta** do comando, e a resposta só sai quando o comando **termina**. Se o comando espera, por exemplo com `$async` e `$replyIn`, os botões só aparecem depois da espera.
+
+Um crash que abre a sala, espera 25 segundos e roda o jogo no mesmo comando mostra o botão **Entrar** só quando a partida já acabou.
+
+### O contorno
+
+Divida em dois, como no [Crash](https://github.com/seaka-bot/crash-bdfd) e no Uno:
+
+1. O comando de mensagem só abre a sala: responde com os botões e **termina na hora**.
+2. O jogo roda no `$onInteraction` do botão **Iniciar**. Comece com `$defer`, que avisa o Discord que o clique foi recebido. Sem ele, um jogo que demora mais de 3 segundos mostra "interação falhou".
+3. Durante o jogo, mude a mensagem com `$editMessage[$channelID;$var[id];;título;descrição;cor]`. Com o conteúdo vazio e título e descrição preenchidos, ela vira uma embed.
 
 ---
 
