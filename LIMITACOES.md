@@ -10,6 +10,8 @@ As técnicas pra contornar a falta de loop, banco e sessão estão nas [Técnica
 - [$stop dentro de $async só encerra o bloco](#stop-dentro-de-async-só-encerra-o-bloco)
 - [Resposta efêmera a um botão vem com os botões da mensagem](#resposta-efêmera-a-um-botão-vem-com-os-botões-da-mensagem)
 - [Num comando de mensagem, os botões só aparecem no fim](#num-comando-de-mensagem-os-botões-só-aparecem-no-fim)
+- [$editMessage não cria embed](#editmessage-não-cria-embed)
+- [Números vão só até 2¹²⁸](#números-vão-só-até-2¹²⁸)
 
 ---
 
@@ -25,7 +27,7 @@ Clicou em **Entrar** duas vezes? A resposta "Você já está nessa partida!" apa
 
 ### O contorno
 
-Junte um `$removeButtons` ao `$ephemeral`. Na resposta efêmera, ele tira a cópia, e a mensagem original continua com os botões dela:
+Junte um `$removeButtons` (ou `$removeAllComponents`) ao `$ephemeral`, antes ou depois dele. Na resposta efêmera, ele tira a cópia, e a mensagem original continua com os botões dela:
 
 ```bdfd
 $if[$getTextSplitIndex[$authorID]==-1]$else $ephemeral $removeButtons Você já está nessa partida! $stop $endif
@@ -49,7 +51,7 @@ Divida em dois, como no [Crash](https://github.com/seaka-bot/crash-bdfd) e no Un
 
 1. O comando de mensagem só abre a sala: responde com os botões e **termina na hora**.
 2. O jogo roda no `$onInteraction` do botão **Iniciar**. Comece com `$defer`, que avisa o Discord que o clique foi recebido. Sem ele, um jogo que demora mais de 3 segundos mostra "interação falhou".
-3. Durante o jogo, mude a mensagem com `$editMessage[$channelID;$var[id];;título;descrição;cor]`. Com o conteúdo vazio e título e descrição preenchidos, ela vira uma embed.
+3. Durante o jogo, mude o texto da mensagem com `$editMessage[$channelID;$var[id];novo texto]`. Veja [$editMessage não cria embed](#editmessage-não-cria-embed).
 
 ---
 
@@ -188,6 +190,43 @@ $if[$var[parar]==sim]$stop$endif
 ```
 
 O loop do [Crash](https://github.com/seaka-bot/crash-bdfd) faz isso: se a sala foi zerada durante a espera, ele marca `fim` e para depois do `$await`.
+
+---
+
+## $editMessage não cria embed
+
+A wiki lista título, descrição e cor no `$editMessage`. Numa mensagem de texto, eles não fazem nada:
+
+```bdfd
+$var[id;$sendMessage[conteúdo original;yes]]
+$editMessage[$channelID;$var[id];;Título novo;Descrição nova;FF0000]
+$var[id2;$sendMessage[outro original;yes]]
+$editMessage[$channelID;$var[id2];texto novo;Título 2;Descrição 2;FF0000]
+```
+
+A primeira mensagem continua `conteúdo original`: com o conteúdo vazio, nada muda. A segunda vira `texto novo`, sem embed nenhuma.
+
+### O contorno
+
+Pra uma mensagem que muda sozinha, como a pista do [Crash](https://github.com/seaka-bot/crash-bdfd), use texto, não embed. Se a mensagem começou com embed, o `$editMessage` troca o texto, e a embed velha fica embaixo, parada.
+
+> Ainda falta testar se ele consegue mudar uma mensagem que **já** tem embed.
+
+---
+
+## Números vão só até 2¹²⁸
+
+As funções de conta aceitam número em notação científica, como `1e38`, mas só até 2¹²⁸ (cerca de 3,4 × 10³⁸):
+
+```bdfd
+$sub[1e39;1]
+```
+
+```
+❌ Function `$sub` at `1:1` returned an error: number out of range in position 1, valid range -340282366920938463463374607431768211456.000000 - 340282366920938463463374607431768211456.000000
+```
+
+É por isso que o laço com `$replaceText[$sub[1eY;1];9;código]` (`1e5 − 1 = 99999`, cinco noves, cinco cópias do código) vai só até Y = 38.
 
 ---
 
