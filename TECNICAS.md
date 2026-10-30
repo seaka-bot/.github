@@ -64,6 +64,81 @@ $eval[$replaceText[$var[loop];|;;-1]]
 
 ---
 
+## Espera com $async
+
+O [laço com $eval](#laço-com-eval) roda todas as voltas de uma vez. No Crash isso não serve: o gráfico precisa subir **um nível por segundo**, e as pessoas precisam conseguir sacar no meio.
+
+O BDFD não tem `sleep`. Mas tem o `$async`:
+
+```bdfd
+$async[espera]
+$replyIn[1s]
+$sendMessage[passou 1 segundo]
+$endasync
+$await[espera]
+```
+
+1. **`$async[nome]` … `$endasync`**
+   Marca um bloco que roda em segundo plano.
+
+2. **`$replyIn[1s]`**
+   Dentro do bloco, atrasa o bloco em 1 segundo.
+
+3. **`$await[nome]`**
+   Segura o comando até aquele bloco acabar. O comando fica parado 1 segundo, e só então continua.
+
+Juntando com o laço, cada volta vira um bloco com o número da volta como nome. Este é o esqueleto do Crash:
+
+```bdfd
+$var[i;1]$var[code;$repeatMessage[10;
+$|async[$|var[i\]\]
+$|replyIn[1s\]
+$|var[r%|{-SEMICOL-}%$|random[1%|{-SEMICOL-}%100\]\]
+$|endasync
+$|await[$|var[i\]\]
+$|editMessage[$|channelID%|{-SEMICOL-}%$|var[id\]%|{-SEMICOL-}%nível $|var[i\]\]
+$|var[i%|{-SEMICOL-}%$|calculate[$|var[i\]+1\]\]
+]]
+$var[code;$repeatMessage[2;$var[code]]]
+$eval[$replaceText[$var[code];|;;-1]]
+```
+
+### Explicação
+
+1. **`$|async[$|var[i\]\]`**
+   Cada volta abre um bloco com nome diferente: `1`, `2`, `3`… Assim o `$await` de uma volta não confunde com o da outra.
+
+2. **`$|replyIn[1s\]` e `$|await`**
+   A volta espera 1 segundo antes de sortear o nível.
+
+3. **`$|editMessage`**
+   Em vez de mandar uma mensagem por volta, edita sempre a mesma (`$var[id]`, guardada com `$sendMessage[...;yes]` antes do laço). O gráfico "anda" na mesma mensagem.
+
+4. **`$repeatMessage[2;$var[code]]`**
+   Dobra o código pronto: 10 voltas × 2 = 20 níveis. Pedir 20 de uma vez no primeiro `$repeatMessage` deixaria o texto montado bem maior.
+
+### Enquanto um comando espera, os outros rodam
+
+Essa é a parte boa. Durante o segundo de espera, outra pessoa pode mandar `s*sair`. Esse comando roda na hora e muda a variável dela:
+
+```bdfd
+$setVar[crash;false-0-0;$authorID]
+```
+
+Na volta seguinte, o laço do Crash confere essa variável antes de mexer no jogador. Quem já saiu é pulado:
+
+```bdfd
+$|if[$|checkContains[$|getVar[crash%|{-SEMICOL-}%$|var[p\]\]%|{-SEMICOL-}%true\]==true\]
+```
+
+Ou seja: **dois comandos conversam por uma variável**. Um fica em laço, lendo. O outro roda no meio da espera e escreve.
+
+> **Cuidado:** leia a variável **dentro** do bloco, depois do `$replyIn`. Se ler antes da espera, o laço vê o valor velho, de antes de a pessoa sacar.
+
+> **Lembre:** o comando que espera continua ocupando o bot. Com 20 níveis de 1 segundo, ele roda por uns 20 segundos. Prefira poucas voltas e espera curta.
+
+---
+
 ## Emojis dinâmicos
 
 No Uno, cada carta é um emoji que você sobe num servidor do Discord. Quando você sobe, dá um **nome** pra ele, por exemplo `r1` pro 1 vermelho.
