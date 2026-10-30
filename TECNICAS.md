@@ -4,6 +4,8 @@ O BDFD não tinha loop, nem banco de dados, nem sessão. Todo projeto do Seaka u
 
 Os exemplos são do código real do [Uno](https://github.com/seaka-bot/uno) e do [Crash](https://github.com/seaka-bot/crash-bdfd).
 
+> Pegadinhas do próprio BDFD, como o `$else` que não pode encostar em nada, estão em [Limitações e bugs](LIMITACOES.md).
+
 - [Laço com $eval](#laço-com-eval): repetir comandos sem ter loop
 - [Espera com $async](#espera-com-async): um laço que espera entre uma volta e outra
 - [Emojis dinâmicos](#emojis-dinâmicos): criar uma variável pra cada emoji, sozinho
