@@ -12,6 +12,7 @@ As técnicas pra contornar a falta de loop, banco e sessão estão nas [Técnica
 - [Num comando de mensagem, os botões só aparecem no fim](#num-comando-de-mensagem-os-botões-só-aparecem-no-fim)
 - [$editMessage não cria embed](#editmessage-não-cria-embed)
 - [Números vão só até 2¹²⁸](#números-vão-só-até-2¹²⁸)
+- [$eval não roda dentro de outro $eval](#eval-não-roda-dentro-de-outro-eval)
 
 ---
 
@@ -237,6 +238,29 @@ $replaceText[$sub[1e3;1];9;oi ]    → oi oi oi
 Isso vira um laço: `1eY − 1` é um número com Y noves, e o `$replaceText` troca cada 9 pelo código, repetindo o código Y vezes. Funciona até Y = 38, porque `1e39` já passa do limite.
 
 > **Cuidado:** `$divide` sem `$enableDecimals` corta a parte decimal: `$divide[1;2]` dá `0`.
+
+---
+
+## $eval não roda dentro de outro $eval
+
+Um `$eval` que aparece no código que **outro** `$eval` está rodando não funciona.
+
+Isso pega quem roda código que veio de fora. Por exemplo, um comando que busca um teste com `$httpGet` e roda com `$eval[$httpResult]`: se o teste tiver um [laço com $eval](TECNICAS.md#laço-com-eval), o laço não roda.
+
+### O contorno
+
+Rode os laços **um depois do outro**, nunca um dentro do outro. Cada `$eval` monta o código dele numa variável e roda sozinho:
+
+```bdfd
+$var[code;$repeatMessage[8;...primeiro laço...]]
+$eval[$replaceText[$var[code];|;;-1]]
+$var[code;$repeatMessage[5;...segundo laço...]]
+$eval[$replaceText[$var[code];|;;-1]]
+```
+
+O xadrez e o crash fazem assim: o tabuleiro é um laço, os botões de cada grupo são outro, e eles nunca se encaixam.
+
+> Um `$repeatMessage` **sem barra** dentro do código do laço não conta: ele roda na montagem, antes do `$eval`. É o que o [Crash](https://github.com/seaka-bot/crash-bdfd) faz pra escrever uma linha por jogador.
 
 ---
 
