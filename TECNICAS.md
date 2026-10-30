@@ -2,9 +2,10 @@
 
 O BDFD não tinha loop, nem banco de dados, nem sessão. Todo projeto do Seaka usa as mesmas gambiarras pra contornar isso, então elas estão explicadas aqui, uma vez só.
 
-Os exemplos são do código real do [Uno](https://github.com/seaka-bot/uno).
+Os exemplos são do código real do [Uno](https://github.com/seaka-bot/uno) e do [Crash](https://github.com/seaka-bot/crash-bdfd).
 
 - [Laço com $eval](#laço-com-eval): repetir comandos sem ter loop
+- [Espera com $async](#espera-com-async): um laço que espera entre uma volta e outra
 - [Emojis dinâmicos](#emojis-dinâmicos): criar uma variável pra cada emoji, sozinho
 - [String como banco de dados](#string-como-banco-de-dados): guardar listas numa variável de texto
 - [Estado no ID do botão](#estado-no-id-do-botão): saber de quem é o clique sem ter sessão
