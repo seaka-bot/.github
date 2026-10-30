@@ -41,6 +41,8 @@ O `$addButton` coloca o botão na **resposta** do comando, e a resposta só sai 
 
 Um crash que abre a sala, espera 25 segundos e roda o jogo no mesmo comando mostra o botão **Entrar** só quando a partida já acabou.
 
+> **Ainda não confirmado com um teste isolado.** É a explicação mais provável pro crash por botões que não funcionava. O contorno abaixo foi testado e funciona.
+
 ### O contorno
 
 Divida em dois, como no [Crash](https://github.com/seaka-bot/crash-bdfd) e no Uno:
